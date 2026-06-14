@@ -2,6 +2,8 @@
 #include <vector>
 #include <ctime>
 #include<fstream>
+#include <algorithm>
+#include <cctype>
 
 using namespace std;
 
@@ -197,8 +199,23 @@ void add_book()
     cout << "Enter Genre : ";
     getline(cin, book.genre);
 
-    cout << "Enter Rental Price : ";
-    cin >> book.rental_price;
+    transform(book.genre.begin(),
+          book.genre.end(),
+          book.genre.begin(),
+          ::tolower);
+
+    if(book.genre == "programming" ||
+        book.genre == "educational")
+    {
+        book.rental_price = 0;
+
+        cout << "This Genre Is Free!\n";
+    }
+    else
+    {
+        cout << "Enter Rental Price : ";
+        cin >> book.rental_price;
+    }
 
     ofstream file("books.csv", ios::app);
 
