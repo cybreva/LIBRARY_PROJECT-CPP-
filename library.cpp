@@ -4,8 +4,21 @@
 #include<fstream>
 #include <algorithm>
 #include <cctype>
+#include <sstream>
+#include <iomanip>
 
 using namespace std;
+
+string trim(string s)
+{
+    while(!s.empty() && s.front() == ' ')
+        s.erase(0, 1);
+
+    while(!s.empty() && s.back() == ' ')
+        s.pop_back();
+
+    return s;
+}
 
 struct librariandata{
     string librarian_name;
@@ -95,7 +108,49 @@ string get_current_datetime()
            to_string(ltm->tm_min) + ":" +
            to_string(ltm->tm_sec);
 }
+bool book_exists(string search_book)
+{
+    ifstream file("books.csv");
 
+    string line;
+
+    while(getline(file, line))
+    {
+        stringstream ss(line);
+
+        string name, genre, price;
+
+        getline(ss, name, ',');
+        getline(ss, genre, ',');
+        getline(ss, price, ',');
+
+        if(trim(name) == trim(search_book))
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+string add_3_days()
+{
+    time_t now = time(0);
+    now += 3 * 24 * 60 * 60;
+
+    tm *ltm = localtime(&now);
+
+    stringstream ss;
+
+    ss << setfill('0') << setw(2) << ltm->tm_mday << "-"
+       << setw(2) << ltm->tm_mon + 1 << "-"
+       << ltm->tm_year + 1900 << " "
+       << setw(2) << ltm->tm_hour << ":"
+       << setw(2) << ltm->tm_min << ":"
+       << setw(2) << ltm->tm_sec;
+
+    return ss.str();
+}
 void issue_book()
 {
     userdata user;
@@ -104,50 +159,82 @@ void issue_book()
     cin.ignore();
     getline(cin, user.user_name);
 
-
     cout << "Enter Book Name : ";
     getline(cin, user.book_name);
 
-    string issue_date = get_current_datetime();
+    if(!book_exists(user.book_name))
+    {
+        cout << "BOOK NOT FOUND IN LIBRARY \n";
+        return;
+    }
 
-    ofstream file("userdata.csv", ios::app);
+    // 🔥 ISSUE TIME
+    string issue_time = get_current_datetime();
+
+    // 🔥 DUE TIME (3 days later)
+    string due_time = add_3_days();
+
+    // 🔥 WRITE TO FILE
+    ofstream file("transactions.csv", ios::app);
 
     file << user.user_name << ","
-     << user.book_name << ","
-     << issue_date << ","
-     << "ISSUED"
-     << "\n";
+         << user.book_name << ","
+         << issue_time << ","
+         << due_time << ","
+         << "ISSUED"
+         << "\n";
+
     file.close();
 
     cout << "Book Issued Successfully!\n";
 }
 void return_book()
 {
-    string user_name;
-    string book_name;
+    ifstream file("transactions.csv");
+    ofstream temp("temp.csv");
 
-    cout << "Enter User Name : ";
+    string line;
+
+    string user, book;
+
+    cout << "Enter User Name: ";
+    cin >> user;
+
+    cout << "Enter Book Name: ";
     cin.ignore();
-    getline(cin, user_name);
+    getline(cin, book);
 
-    cout << "Enter Book Name : ";
-    getline(cin, book_name);
+    while(getline(file, line))
+    {
+        stringstream ss(line);
 
-    ofstream file("userdata.csv", ios::app);
+        string u,b,issue,due,status;
 
-    file << user_name << ","
-         << book_name << ","
-         << get_current_datetime() << ","
-         << "RETURNED"
-         << "\n";
+        getline(ss,u,',');
+        getline(ss,b,',');
+        getline(ss,issue,',');
+        getline(ss,due,',');
+        getline(ss,status,',');
+
+        if(u == user && b == book && status == "ISSUED")
+        {
+            status = "RETURNED";
+        }
+
+        temp << u << "," << b << "," << issue << "," << due << "," << status << "\n";
+    }
 
     file.close();
+    temp.close();
 
-    cout << "Book Returned Successfully!\n";
+    remove("transactions.csv");
+    rename("temp.csv","transactions.csv");
+
+    cout << "Book Returned Successfully\n";
 }
 void view_records()
 {
-    ifstream file("userdata.csv");
+    ifstream file("transactions.csv");
 
     string line;
 
@@ -162,7 +249,7 @@ void view_records()
 }
 void search_record()
 {
-    ifstream file("userdata.csv");
+    ifstream file("transactions.csv");
 
     string search_name;
     string line;
@@ -188,6 +275,34 @@ void search_record()
 
     file.close();
 }
+int get_next_copy_number(string book_name)
+{
+    ifstream file("books.csv");
+    string line;
+
+    int max_copy = 0;
+
+    while(getline(file, line))
+    {
+        stringstream ss(line);
+
+        string name, copy, genre, price;
+
+        getline(ss, name, ',');
+        getline(ss, copy, ',');
+        getline(ss, genre, ',');
+        getline(ss, price, ',');
+
+        if(name == book_name)
+        {
+            int c = stoi(copy);
+            if(c > max_copy)
+                max_copy = c;
+        }
+    }
+
+    return max_copy + 1;
+}
 void add_book()
 {
     bookdata book;
@@ -199,36 +314,56 @@ void add_book()
     cout << "Enter Genre : ";
     getline(cin, book.genre);
 
-    transform(book.genre.begin(),
-          book.genre.end(),
-          book.genre.begin(),
-          ::tolower);
-
-    if(book.genre == "programming" ||
-        book.genre == "educational")
-    {
+    if(book.genre == "programming" || book.genre == "educational")
         book.rental_price = 0;
-
-        cout << "This Genre Is Free!\n";
-    }
     else
     {
         cout << "Enter Rental Price : ";
         cin >> book.rental_price;
     }
 
+    int copy_no = get_next_copy_number(book.book_name);
+
     ofstream file("books.csv", ios::app);
 
     file << book.book_name << ","
+         << copy_no << ","
          << book.genre << ","
          << book.rental_price
          << "\n";
 
     file.close();
 
-    cout << "\nBook Added Successfully!\n";
+    cout << "Book Added Successfully! Copy #" << copy_no << "\n";
 }
+void check_overdue_books()
+{
+    ifstream file("transactions.csv");
+    string line;
 
+    time_t now = time(0);
+
+    cout << "\nOVERDUE BOOKS:\n";
+
+    while(getline(file,line))
+    {
+        stringstream ss(line);
+
+        string u,b,issue,due,status;
+
+        getline(ss,u,',');
+        getline(ss,b,',');
+        getline(ss,issue,',');
+        getline(ss,due,',');
+        getline(ss,status,',');
+
+        if(status == "ISSUED")
+        {
+            // simple skip parsing complexity for now
+            cout << u << " -> " << b << " (CHECK MANUALLY)\n";
+        }
+    }
+}
 
 int main (){
     
@@ -255,6 +390,8 @@ int main (){
     cout << "===========================\n";
     cout << "           WELCOME         \n";
     cout << "===========================\n";
+
+    check_overdue_books();
 
 
 
