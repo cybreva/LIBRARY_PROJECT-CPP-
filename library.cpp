@@ -93,7 +93,6 @@ void issue_book()
 
 
     cout << "Enter Book Name : ";
-    cin.ignore();
     getline(cin, user.book_name);
 
     string issue_date = get_current_date();
@@ -123,18 +122,66 @@ void view_records()
 
     file.close();
 }
+void search_record()
+{
+    ifstream file("userdata.csv");
+
+    string search_name;
+    string line;
+    bool found = false;
+
+    cout << "\nEnter Name To Search : ";
+    cin.ignore();
+    getline(cin, search_name);
+
+    while(getline(file, line))
+    {
+        if(line.find(search_name) != string::npos)
+        {
+            cout << line << endl;
+            found = true;
+        }
+    }
+
+    if(!found)
+    {
+        cout << "\nNo Record Found!\n";
+    }
+
+    file.close();
+}
 
 
 
 int main (){
-    librarian_name_input();
-    librarian_id_input();
-    librarian_pin_input();
+    
+    string librarian_name = librarian_name_input();
+
+    int librarian_id = librarian_id_input();
+
+    if(librarian_id == -1)
+    {
+        cout << "\nACCESS DENIED!\n";
+        return 0;
+    }
+
+    int librarian_pin = librarian_pin_input();
+
+    if(librarian_pin == -1)
+    {
+        cout << "\nACCESS DENIED!\n";
+        return 0;
+    }
+    
+
 
     cout << "===========================\n";
     cout << "           WELCOME         \n";
     cout << "===========================\n";
 
+
+
+    
     int choice ;   
     
     do
@@ -142,7 +189,8 @@ int main (){
     cout << "\n\n===== LIBRARY MENU =====\n";
     cout << "1. Issue Book\n";
     cout << "2. View Records\n";
-    cout << "3. Exit\n";
+    cout << "3. Fetch Record\n";
+    cout << "4. Exit\n";
 
     cout << "\nEnter Your Choice : ";
     cin >> choice;
@@ -156,8 +204,10 @@ int main (){
         case 2:
             view_records();
             break;
-
-        case 3:
+        case 3 :
+            search_record();
+            break;
+        case 4:
             cout << "\nThank You For Using Library System!\n";
             break;
 
@@ -166,5 +216,5 @@ int main (){
             break;
     }
 
-} while(choice != 3);;
+} while(choice != 4);;
 }
