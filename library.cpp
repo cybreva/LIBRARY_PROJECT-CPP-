@@ -17,6 +17,14 @@ struct userdata{
 
 };
 
+struct bookdata
+{
+    string book_name;
+    string genre;
+    int rental_price;
+};
+
+
 string librarian_name_input(){
     librariandata librarian ;
     cout << "PLEASE ENTER YOUR NAME : ";
@@ -178,7 +186,31 @@ void search_record()
 
     file.close();
 }
+void add_book()
+{
+    bookdata book;
 
+    cout << "Enter Book Name : ";
+    cin.ignore();
+    getline(cin, book.book_name);
+
+    cout << "Enter Genre : ";
+    getline(cin, book.genre);
+
+    cout << "Enter Rental Price : ";
+    cin >> book.rental_price;
+
+    ofstream file("books.csv", ios::app);
+
+    file << book.book_name << ","
+         << book.genre << ","
+         << book.rental_price
+         << "\n";
+
+    file.close();
+
+    cout << "\nBook Added Successfully!\n";
+}
 
 
 int main (){
@@ -215,11 +247,12 @@ int main (){
     do
 {
     cout << "\n\n===== LIBRARY MENU =====\n";
-    cout << "1. Issue Book\n";
-    cout << "2. Return Book\n";
-    cout << "3. View Records\n";
-    cout << "4. Fetch Record\n";
-    cout << "5. Exit\n";
+    cout << "1. Add Book\n";
+    cout << "2. Issue Book\n";
+    cout << "3. Return Book\n";
+    cout << "4. View Records\n";
+    cout << "5. Fetch Record\n";
+    cout << "6. Exit\n";
 
     cout << "\nEnter Your Choice : ";
     cin >> choice;
@@ -227,24 +260,27 @@ int main (){
     switch(choice)
     {
         case 1:
-            issue_book();
+            add_book();
             break;
         case 2:
-            return_book();
+            issue_book();
             break;
         case 3:
-            view_records();
+            return_book();
             break;
         case 4:
+            view_records();
+            break;
+        case 5:
             search_record();
             break;
-        case 5 :
-            cout << "\nThank You For Using Library System!\n";
+        case 6:
+            cout << "\nByy , Have A Nice Day !\n";
             break;
         default:
             cout << "\nInvalid Choice! Try Again.\n";
             break;
     }
 
-} while(choice != 5);;
+} while(choice != 6);;
 }

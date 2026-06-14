@@ -1,4 +1,4 @@
-#exclude all binaries and extra files
+#exclude all binaries and extra files   
 library
 *.vscode
 *.csv
