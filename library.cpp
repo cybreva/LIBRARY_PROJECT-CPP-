@@ -32,7 +32,7 @@ int librarian_id_input()
 
     while(attempts < 3)
     {
-        cout << "PLEASE ENTER YOUR ADMIN_ID : ";
+        cout << "PLEASE ENTER YOUR ID : ";
         cin >> lib_id;
 
         if(lib_id == 12345)
@@ -73,14 +73,17 @@ int librarian_pin_input()
 
     return -1;
 }
-string get_current_date()
+string get_current_datetime()
 {
     time_t now = time(0);
     tm *ltm = localtime(&now);
 
     return to_string(ltm->tm_mday) + "-" +
            to_string(ltm->tm_mon + 1) + "-" +
-           to_string(ltm->tm_year + 1900);
+           to_string(ltm->tm_year + 1900) + " " +
+           to_string(ltm->tm_hour) + ":" +
+           to_string(ltm->tm_min) + ":" +
+           to_string(ltm->tm_sec);
 }
 
 void issue_book()
@@ -95,17 +98,42 @@ void issue_book()
     cout << "Enter Book Name : ";
     getline(cin, user.book_name);
 
-    string issue_date = get_current_date();
+    string issue_date = get_current_datetime();
 
     ofstream file("userdata.csv", ios::app);
 
     file << user.user_name << ","
-         << user.book_name << ","
-         << issue_date << "\n";
-
+     << user.book_name << ","
+     << issue_date << ","
+     << "ISSUED"
+     << "\n";
     file.close();
 
     cout << "Book Issued Successfully!\n";
+}
+void return_book()
+{
+    string user_name;
+    string book_name;
+
+    cout << "Enter User Name : ";
+    cin.ignore();
+    getline(cin, user_name);
+
+    cout << "Enter Book Name : ";
+    getline(cin, book_name);
+
+    ofstream file("userdata.csv", ios::app);
+
+    file << user_name << ","
+         << book_name << ","
+         << get_current_datetime() << ","
+         << "RETURNED"
+         << "\n";
+
+    file.close();
+
+    cout << "Book Returned Successfully!\n";
 }
 void view_records()
 {
@@ -188,9 +216,10 @@ int main (){
 {
     cout << "\n\n===== LIBRARY MENU =====\n";
     cout << "1. Issue Book\n";
-    cout << "2. View Records\n";
-    cout << "3. Fetch Record\n";
-    cout << "4. Exit\n";
+    cout << "2. Return Book\n";
+    cout << "3. View Records\n";
+    cout << "4. Fetch Record\n";
+    cout << "5. Exit\n";
 
     cout << "\nEnter Your Choice : ";
     cin >> choice;
@@ -200,21 +229,22 @@ int main (){
         case 1:
             issue_book();
             break;
-
         case 2:
+            return_book();
+            break;
+        case 3:
             view_records();
             break;
-        case 3 :
+        case 4:
             search_record();
             break;
-        case 4:
+        case 5 :
             cout << "\nThank You For Using Library System!\n";
             break;
-
         default:
             cout << "\nInvalid Choice! Try Again.\n";
             break;
     }
 
-} while(choice != 4);;
+} while(choice != 5);;
 }
