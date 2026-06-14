@@ -1,0 +1,6 @@
+#exclude all binaries and extra files
+library
+*.vscode
+*.csv
+*.txt
+*.out
